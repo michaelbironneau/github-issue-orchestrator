@@ -1,0 +1,19 @@
+{
+  "name": "github-orchestrator",
+  "version": "0.1.0",
+  "dependencies": {
+    "@octokit/graphql": "^8",
+    "@octokit/rest": "^21"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "^0.70.2",
+    "@types/node": "^25.6.0",
+    "typebox": "^1.1.33",
+    "typescript": "^6.0.3"
+  }
+}
