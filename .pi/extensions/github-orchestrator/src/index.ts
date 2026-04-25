@@ -386,9 +386,9 @@ export default async function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "gh_add_comment",
     label: "Add GitHub Comment",
-    description: "Post a comment on an issue",
+    description: "Post a comment on an issue or pull request",
     parameters: Type.Object({
-      issueNumber: Type.Number({ description: "Issue number" }),
+      issueNumber: Type.Number({ description: "Issue or pull request number" }),
       body: Type.String({ description: "Comment text (markdown supported)" }),
     }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
@@ -400,6 +400,36 @@ export default async function (pi: ExtensionAPI) {
         body: params.body,
       });
       return { content: [{ type: "text", text: `Comment posted: ${comment.html_url}` }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "gh_create_pr_review",
+    label: "Create GitHub PR Review",
+    description: "Submit a review on a pull request with an APPROVE, REQUEST_CHANGES, or COMMENT verdict",
+    parameters: Type.Object({
+      prNumber: Type.Number({ description: "Pull request number" }),
+      body: Type.String({ description: "Review body text (markdown supported)" }),
+      event: Type.Union([
+        Type.Literal("APPROVE"),
+        Type.Literal("REQUEST_CHANGES"),
+        Type.Literal("COMMENT"),
+      ], { description: "Review verdict: APPROVE, REQUEST_CHANGES, or COMMENT" }),
+    }),
+    async execute(_id, params, _signal, _onUpdate, _ctx) {
+      await init();
+      const validEvents = ["APPROVE", "REQUEST_CHANGES", "COMMENT"] as const;
+      if (!validEvents.includes(params.event)) {
+        throw new Error(`Invalid review event "${params.event}". Must be APPROVE, REQUEST_CHANGES, or COMMENT.`);
+      }
+      const { data: review } = await octokit.pulls.createReview({
+        owner: cfg.owner,
+        repo: cfg.repo,
+        pull_number: params.prNumber,
+        body: params.body,
+        event: params.event,
+      });
+      return { content: [{ type: "text", text: `Review submitted on PR #${params.prNumber}: ${review.html_url}` }], details: {} };
     },
   });
 
@@ -511,7 +541,7 @@ export default async function (pi: ExtensionAPI) {
       }
       const tasks = capped.map((issue) => {
         const task = escapeForPiArg(`implement #${issue.number}: ${issue.title}\n${issue.body}`);
-        return `worker[worktree=true] "${task}"`;
+        return `implement[worktree=true] "${task}"`;
       });
       const cmd = `/parallel ${tasks.join(" -> ")}`;
       await pi.sendUserMessage(cmd, { deliverAs: "followUp" });
