@@ -3,6 +3,7 @@ import { Type } from "typebox";
 import { Octokit } from "@octokit/rest";
 import { graphql as createGraphql } from "@octokit/graphql";
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -251,6 +252,22 @@ export default async function (pi: ExtensionAPI) {
     gql = createGraphql.defaults({ headers: { authorization: `token ${token}` } });
   }
 
+  // ─── session_start: deploy bundled agents to the appropriate discovery path ─
+
+  pi.on("session_start", async (_event) => {
+    const agentsSrc = path.join(__dirname, "..", "agents");
+    const extensionDir = path.join(__dirname, "..");
+    const globalBase = path.join(os.homedir(), ".pi", "agent");
+    const isGlobal = extensionDir.startsWith(globalBase + path.sep);
+    const targetDir = isGlobal
+      ? path.join(globalBase, "agents")
+      : path.join(process.cwd(), ".pi", "agents");
+    fs.mkdirSync(targetDir, { recursive: true });
+    for (const file of fs.readdirSync(agentsSrc)) {
+      fs.copyFileSync(path.join(agentsSrc, file), path.join(targetDir, file));
+    }
+  });
+
   // ─── Tools ─────────────────────────────────────────────────────────────────
 
   pi.registerTool({
@@ -443,7 +460,7 @@ export default async function (pi: ExtensionAPI) {
       }
       const tasks = capped.map((issue) => {
         const task = escapeForPiArg(`Plan #${issue.number}: ${issue.title}\n${issue.body}`);
-        return `planner[worktree=true] "${task}"`;
+        return `ghplanner[worktree=true] "${task}"`;
       });
       const cmd = `/parallel ${tasks.join(" -> ")}`;
       await pi.sendUserMessage(cmd, { deliverAs: "followUp" });
@@ -484,7 +501,7 @@ export default async function (pi: ExtensionAPI) {
       const fullTask = extraInstructions
         ? `${taskContent}\n\nAdditional instructions: ${extraInstructions}`
         : taskContent;
-      const cmd = `/run planner "${escapeForPiArg(fullTask)}"`;
+      const cmd = `/run ghplanner "${escapeForPiArg(fullTask)}"`;
       await pi.sendUserMessage(cmd, { deliverAs: "followUp" });
     },
   });
@@ -511,7 +528,7 @@ export default async function (pi: ExtensionAPI) {
       }
       const tasks = capped.map((issue) => {
         const task = escapeForPiArg(`implement #${issue.number}: ${issue.title}\n${issue.body}`);
-        return `worker[worktree=true] "${task}"`;
+        return `ghworker[worktree=true] "${task}"`;
       });
       const cmd = `/parallel ${tasks.join(" -> ")}`;
       await pi.sendUserMessage(cmd, { deliverAs: "followUp" });

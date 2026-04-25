@@ -1,5 +1,5 @@
 ---
-name: planner
+name: ghplanner
 description: Decomposes a rough issue description into a detailed implementation plan, updates the issue, and removes the needs-planning label.
 worktree: true
 inheritProjectContext: true

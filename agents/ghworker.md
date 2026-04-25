@@ -1,5 +1,5 @@
 ---
-name: worker
+name: ghworker
 description: Implements a single GitHub issue end-to-end on a feature branch, opens a PR, and reports status.
 worktree: true
 inheritProjectContext: true

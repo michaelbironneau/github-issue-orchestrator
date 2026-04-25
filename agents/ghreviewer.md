@@ -1,5 +1,5 @@
 ---
-name: reviewer
+name: ghreviewer
 description: Reviews a PR diff against the issue description and posts an APPROVE or REVISE verdict.
 worktree: true
 inheritProjectContext: true
