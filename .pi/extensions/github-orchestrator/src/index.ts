@@ -356,6 +356,28 @@ export default async function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
+    name: "gh_update_issue",
+    label: "Update GitHub Issue",
+    description: "Update an issue's title and/or body (description). Overwrites the previous values.",
+    parameters: Type.Object({
+      issueNumber: Type.Number({ description: "Issue number" }),
+      title: Type.Optional(Type.String({ description: "New title (omit to keep current)" })),
+      body: Type.Optional(Type.String({ description: "New body/description in markdown (omit to keep current)" })),
+    }),
+    async execute(_id, params, _signal, _onUpdate, _ctx) {
+      await init();
+      const { data: issue } = await octokit.issues.update({
+        owner: cfg.owner,
+        repo: cfg.repo,
+        issue_number: params.issueNumber,
+        ...(params.title !== undefined && { title: params.title }),
+        ...(params.body !== undefined && { body: params.body }),
+      });
+      return { content: [{ type: "text", text: `Updated #${params.issueNumber}: ${issue.html_url}` }], details: {} };
+    },
+  });
+
+  pi.registerTool({
     name: "gh_add_comment",
     label: "Add GitHub Comment",
     description: "Post a comment on an issue",

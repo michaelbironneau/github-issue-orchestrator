@@ -31,6 +31,7 @@ The default export is an async function receiving `ExtensionAPI` from `@mariozec
 | `gh_move_issue` | Move an issue to a different Status column |
 | `gh_remove_label` | Remove a label from an issue |
 | `gh_create_pr` | Open a PR on the current branch, auto-adding `Closes #N` |
+| `gh_update_issue` | Update an issue's title and/or body (overwrites previous values) |
 | `gh_add_comment` | Post a markdown comment on an issue |
 
 **Hook**: `tool_call` intercept blocks any `git push` to the base branch or any force push, redirecting agents to use `gh_create_pr` instead.
@@ -59,7 +60,7 @@ All agents use `worktree: true` and `inheritProjectContext: true`.
 | File | Role |
 |------|------|
 | `worker.md` | Implements an issue, opens a PR via `gh_create_pr`, moves to In Review, posts summary comment |
-| `planner.md` | Writes an implementation plan as a comment, removes `needs-planning` label — no code changes |
+| `planner.md` | Writes an implementation plan, overwrites the issue body with the plan, removes `needs-planning` label — no code changes |
 | `reviewer.md` | Reviews PR diff or plan, posts APPROVE ✅ or REVISE 🔄 verdict |
 | `triage.chain.md` | planner → reviewer (spec approval before implementation) |
 | `implement.chain.md` | worker → reviewer (code review after implementation) |

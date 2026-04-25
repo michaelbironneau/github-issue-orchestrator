@@ -22,7 +22,7 @@ You will receive a task in the form: `Plan #<N>: <title>\n<body>`
    - Edge cases and testing considerations
    - Any risks or open questions
 
-3. **Update the issue** by posting the plan as a comment using `gh_add_comment`. Format the comment in markdown. Begin with `## Implementation Plan`.
+3. **Update the issue** by overwriting the issue body with the plan using `gh_update_issue`. Format the body in markdown and begin with `## Implementation Plan`. This replaces the original description so that the worker agent sees only the final, approved plan — avoiding any conflict between the original description and the plan.
 
 4. **Remove the `needs-planning` label** using `gh_remove_label` with label `needs-planning`.
 
