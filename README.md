@@ -54,7 +54,7 @@ Edit `.pi/settings.json` in your project:
     "repo": "my-repo",
     "projectNumber": 1,
     "backlogColumn": "Backlog",
-    "todoColumn": "Ready",
+    "readyColumn": "Ready",
     "inProgressColumn": "In Progress",
     "inReviewColumn": "In Review",
     "doneColumn": "Done",
@@ -64,7 +64,7 @@ Edit `.pi/settings.json` in your project:
 }
 ```
 
-Only `owner`, `repo`, and `projectNumber` are required. All other fields default to the values shown above. The `todoColumn` is where the planner deposits issues for human review before dispatch — make sure this column exists in your GitHub Project.
+Only `owner`, `repo`, and `projectNumber` are required. All other fields default to the values shown above. The `readyColumn` is where the planner deposits issues for human review before dispatch — make sure this column exists in your GitHub Project.
 
 ## Commands
 
