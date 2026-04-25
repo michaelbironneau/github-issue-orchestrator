@@ -9,8 +9,8 @@ GitHub Projects is the source of truth — no separate dashboard. Agents work on
 ```
 Backlog (needs-planning)
   └─ /plan-all  ──▶  planner agents elaborate each issue in parallel
-                      ↓ posts implementation plan as comment, removes label
-  Human reviews plans, moves issues to "To Do"
+                      ↓ posts implementation plan, removes label, moves to "Ready"
+  Human reviews plans in "Ready" column
   └─ /dispatch  ──▶  worker agents implement each issue in parallel worktrees
                       ↓ opens PR, moves issue to "In Review"
                      reviewer agent inspects diff, posts APPROVE ✅ or REVISE 🔄
@@ -54,7 +54,7 @@ Edit `.pi/settings.json` in your project:
     "repo": "my-repo",
     "projectNumber": 1,
     "backlogColumn": "Backlog",
-    "todoColumn": "To Do",
+    "todoColumn": "Ready",
     "inProgressColumn": "In Progress",
     "inReviewColumn": "In Review",
     "doneColumn": "Done",
@@ -64,15 +64,15 @@ Edit `.pi/settings.json` in your project:
 }
 ```
 
-Only `owner`, `repo`, and `projectNumber` are required. All other fields default to the values shown above.
+Only `owner`, `repo`, and `projectNumber` are required. All other fields default to the values shown above. The `todoColumn` is where the planner deposits issues for human review before dispatch — make sure this column exists in your GitHub Project.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/plan-all` | Fetch all Backlog issues labelled `needs-planning` and fan out planner agents in parallel |
+| `/plan-all` | Fetch all Backlog issues labelled `needs-planning` (skipping those labelled `human`) and fan out planner agents in parallel |
 | `/plan <N> [instructions]` | Plan a single issue by number, with optional extra instructions |
-| `/dispatch` | Fetch all "To Do" issues and fan out worker agents in parallel |
+| `/dispatch` | Fetch all Ready-column issues (skipping those labelled `human`) and fan out worker agents in parallel |
 
 You can also run the predefined chains directly:
 
@@ -95,6 +95,10 @@ The extension registers these tools that agents (and the LLM) can call:
 | `gh_add_comment` | Post a markdown comment on an issue |
 
 Direct pushes to the base branch and force pushes are blocked — agents must use `gh_create_pr`.
+
+## Human-reserved issues
+
+Issues labelled `human` are excluded from all automated commands (`/plan-all`, `/plan`, and `/dispatch`). This allows humans to reserve specific issues for manual planning or implementation without agent interference.
 
 ## Customising agent behaviour
 

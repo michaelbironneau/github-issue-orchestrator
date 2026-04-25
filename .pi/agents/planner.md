@@ -24,6 +24,18 @@ You will receive a task in the form: `Plan #<N>: <title>\n<body>`
 
 3. **Update the issue** by overwriting the issue body with the plan using `gh_update_issue`. Format the body in markdown and begin with `## Implementation Plan`. This replaces the original description so that the worker agent sees only the final, approved plan — avoiding any conflict between the original description and the plan.
 
+   At the very end of the plan body, always append the following section verbatim (substituting `<N>` with the actual issue number):
+
+   ```
+   ## Delivery Steps
+   After implementing all the above:
+   1. Call `gh_create_pr` with `issueNumber: <N>`, a concise title, and a brief summary.
+   2. Call `gh_move_issue` to move the issue to the "In Review" column.
+   3. Call `gh_add_comment` on issue `#<N>` with: what was implemented, key design decisions, and a link to the PR.
+
+   Do **not** mark the issue as Done — leave that to the reviewer.
+   ```
+
 4. **Remove the `needs-planning` label** using `gh_remove_label` with label `needs-planning`.
 
 5. **Move the issue** to the Ready column by calling `gh_move_issue`.

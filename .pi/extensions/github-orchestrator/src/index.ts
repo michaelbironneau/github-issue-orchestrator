@@ -5,6 +5,12 @@ import { graphql as createGraphql } from "@octokit/graphql";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function escapeForPiArg(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/"/g, '\\"');
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Config {
@@ -52,7 +58,7 @@ function loadConfig(cwd: string): Config {
   if (!cfg.projectNumber) throw new Error(`githubOrchestrator.projectNumber is required`);
   return {
     backlogColumn: "Backlog",
-    todoColumn: "To Do",
+    todoColumn: "Ready",
     inProgressColumn: "In Progress",
     inReviewColumn: "In Review",
     doneColumn: "Done",
@@ -436,7 +442,7 @@ export default async function (pi: ExtensionAPI) {
         ctx.ui.notify(`Capping at maxParallel=${cfg.maxParallel} (${issues.length} total found).`, "info");
       }
       const tasks = capped.map((issue) => {
-        const task = `Plan #${issue.number}: ${issue.title}\n${issue.body}`.replace(/"/g, '\\"');
+        const task = escapeForPiArg(`Plan #${issue.number}: ${issue.title}\n${issue.body}`);
         return `planner[worktree=true] "${task}"`;
       });
       const cmd = `/parallel ${tasks.join(" -> ")}`;
@@ -478,7 +484,7 @@ export default async function (pi: ExtensionAPI) {
       const fullTask = extraInstructions
         ? `${taskContent}\n\nAdditional instructions: ${extraInstructions}`
         : taskContent;
-      const cmd = `/run planner "${fullTask.replace(/"/g, '\\"')}"`;
+      const cmd = `/run planner "${escapeForPiArg(fullTask)}"`;
       await pi.sendUserMessage(cmd, { deliverAs: "followUp" });
     },
   });
@@ -504,7 +510,7 @@ export default async function (pi: ExtensionAPI) {
         ctx.ui.notify(`Capping at maxParallel=${cfg.maxParallel} (${issues.length} total found).`, "info");
       }
       const tasks = capped.map((issue) => {
-        const task = `implement #${issue.number}: ${issue.title}\n${issue.body}`.replace(/"/g, '\\"');
+        const task = escapeForPiArg(`implement #${issue.number}: ${issue.title}\n${issue.body}`);
         return `worker[worktree=true] "${task}"`;
       });
       const cmd = `/parallel ${tasks.join(" -> ")}`;

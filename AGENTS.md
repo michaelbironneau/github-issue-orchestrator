@@ -39,9 +39,9 @@ The default export is an async function receiving `ExtensionAPI` from `@mariozec
 **Commands** (user-invocable via `/`):
 | Command | Behaviour |
 |---------|-----------|
-| `/plan-all` | Fans out `planner[worktree=true]` agents for all Backlog issues labelled `needs-planning`, up to `maxParallel` |
+| `/plan-all` | Fans out `planner[worktree=true]` agents for all Backlog issues labelled `needs-planning` (skipping issues labelled `human`), up to `maxParallel` |
 | `/plan <N> [instructions]` | Runs a single planner for issue `#N` |
-| `/dispatch` | Fans out `worker[worktree=true]` agents for all issues in the `todoColumn`, up to `maxParallel` |
+| `/dispatch` | Fans out `worker[worktree=true]` agents for all issues in the Ready column (skipping those labelled `human`), up to `maxParallel` |
 
 `/plan-all` and `/dispatch` emit a `/parallel ...` pi command via `pi.sendUserMessage(..., { deliverAs: "followUp" })`.
 
@@ -60,7 +60,7 @@ All agents use `worktree: true` and `inheritProjectContext: true`.
 | File | Role |
 |------|------|
 | `worker.md` | Implements an issue, opens a PR via `gh_create_pr`, moves to In Review, posts summary comment |
-| `planner.md` | Writes an implementation plan, overwrites the issue body with the plan, removes `needs-planning` label — no code changes |
+| `planner.md` | Writes an implementation plan, overwrites the issue body with the plan, removes `needs-planning` label, moves issue to Ready column — no code changes |
 | `reviewer.md` | Reviews PR diff or plan, posts APPROVE ✅ or REVISE 🔄 verdict |
 | `triage.chain.md` | planner → reviewer (spec approval before implementation) |
 | `implement.chain.md` | worker → reviewer (code review after implementation) |
@@ -77,7 +77,7 @@ Users can edit these `.md` files freely; changes take effect on the next `/reloa
     "repo": "my-repo",
     "projectNumber": 1,
     "backlogColumn": "Backlog",
-    "todoColumn": "To Do",
+    "todoColumn": "Ready",
     "inProgressColumn": "In Progress",
     "inReviewColumn": "In Review",
     "doneColumn": "Done",
@@ -87,17 +87,19 @@ Users can edit these `.md` files freely; changes take effect on the next `/reloa
 }
 ```
 
-Only `owner`, `repo`, and `projectNumber` are required; all other fields have defaults matching the above.
+Only `owner`, `repo`, and `projectNumber` are required; all other fields have defaults matching the above. `todoColumn` is the column the planner moves issues into and `/dispatch` reads from (defaults to `"Ready"`).
 
 ## Typical workflow
 
 ```
 Backlog (needs-planning label)
-  → /plan-all  → planner agents elaborate issues → issues ready for human review
-  → human moves issues to "To Do"
+  → /plan-all  → planner agents elaborate issues → issues moved to "Ready"
+  → human reviews plans in "Ready" column
   → /dispatch  → worker agents implement in parallel worktrees → PRs opened
   → reviewer agents post APPROVE/REVISE → issues move to Done
 ```
+
+Issues labelled `human` are skipped by `/plan-all` and `/dispatch`.
 
 ## Extension API reference
 
