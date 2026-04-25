@@ -43,7 +43,15 @@ Or install globally (available in all projects):
 pi install npm:github-issue-orchestrator
 ```
 
+If you must have the latest (possibly unstable) version, install from git instead
+
+```bash 
+pi install git:michaelbironneau/github-issue-orchestrator
+```
+
 `pi install` handles `npm install` automatically. On first session start the extension copies its agent templates into `.pi/agents/` (project install) or `~/.pi/agent/agents/` (global install). Running `pi update` followed by a session restart keeps the agents in sync with the latest version.
+
+**Make sure to** update your `settings.json` (below) or you'll get some errors.
 
 ## Configuration
 

@@ -53,7 +53,7 @@ function loadConfig(cwd: string): Config {
     throw new Error(`Cannot read ${settingsPath}. Create .pi/settings.json with a "githubOrchestrator" key.`);
   }
   const cfg = raw["githubOrchestrator"] as Partial<Config> | undefined;
-  if (!cfg) throw new Error(`Missing "githubOrchestrator" key in ${settingsPath}.`);
+  if (!cfg) throw new Error(`Please configure your pi settings for Github issue orchestration. Instructions: https://github.com/michaelbironneau/github-issue-orchestrator.`);
   if (!cfg.owner) throw new Error(`githubOrchestrator.owner is required`);
   if (!cfg.repo) throw new Error(`githubOrchestrator.repo is required`);
   if (!cfg.projectNumber) throw new Error(`githubOrchestrator.projectNumber is required`);
