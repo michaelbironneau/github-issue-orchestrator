@@ -34,13 +34,13 @@ The extension itself is ~400 lines of TypeScript and owns only the GitHub API la
 Install into your project (recommended — shares config with your team via `.pi/settings.json`):
 
 ```bash
-pi install -l git:github.com/michaelbironneau/github-issue-orchestrator
+pi install -l npm:github-issue-orchestrator
 ```
 
 Or install globally (available in all projects):
 
 ```bash
-pi install git:github.com/michaelbironneau/github-issue-orchestrator
+pi install npm:github-issue-orchestrator
 ```
 
 `pi install` handles `npm install` automatically. On first session start the extension copies its agent templates into `.pi/agents/` (project install) or `~/.pi/agent/agents/` (global install). Running `pi update` followed by a session restart keeps the agents in sync with the latest version.
