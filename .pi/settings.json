@@ -1,14 +1,14 @@
 {
   "githubOrchestrator": {
-    "owner": "my-org",
-    "repo": "my-repo",
-    "projectNumber": 1,
+    "owner": "michaelbironneau",
+    "repo": "github-issue-orchestrator",
+    "projectNumber": 3,
     "backlogColumn": "Backlog",
-    "todoColumn": "To Do",
-    "inProgressColumn": "In Progress",
-    "inReviewColumn": "In Review",
+    "todoColumn": "Ready",
+    "inProgressColumn": "In progress",
+    "inReviewColumn": "In review",
     "doneColumn": "Done",
-    "baseBranch": "main",
+    "baseBranch": "master",
     "maxParallel": 3
   }
 }

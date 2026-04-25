@@ -59,7 +59,7 @@ All agents use `worktree: true` and `inheritProjectContext: true`.
 |------|------|
 | `worker.md` | Implements an issue, opens a PR via `gh_create_pr`, moves to In Review, posts summary comment |
 | `planner.md` | Writes an implementation plan as a comment, removes `needs-planning` label — no code changes |
-| `reviewer.md` | Reviews PR diff or plan, posts APPROVE ✅ or REVISE 🔄 verdict; on APPROVE moves issue to Done |
+| `reviewer.md` | Reviews PR diff or plan, posts APPROVE ✅ or REVISE 🔄 verdict |
 | `triage.chain.md` | planner → reviewer (spec approval before implementation) |
 | `implement.chain.md` | worker → reviewer (code review after implementation) |
 | `full.chain.md` | Full pipeline: triage + implement combined |

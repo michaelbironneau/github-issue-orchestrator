@@ -39,14 +39,12 @@ You will receive either:
    ## Review: APPROVE ✅
    <brief summary of what was reviewed and why it passes>
    ```
-   Then call `gh_move_issue` to move the issue to the Done column.
 
    For revision requests:
    ```
    ## Review: REVISE 🔄
    <specific, actionable list of required changes>
    ```
-   Leave the issue in In Review.
 
 ## Rules
 

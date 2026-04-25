@@ -15,7 +15,7 @@ Backlog (needs-planning)
                       ↓ opens PR, moves issue to "In Review"
                      reviewer agent inspects diff, posts APPROVE ✅ or REVISE 🔄
                       ↓ on APPROVE
-                     issue moves to "Done"
+                     human reviews and merges PR if they wish
 ```
 
 The extension itself is ~400 lines of TypeScript and owns only the GitHub API layer. Orchestration, parallelism, and agent logic live in pi-subagents and the `.pi/agents/*.md` prompt templates.
