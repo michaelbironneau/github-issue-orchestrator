@@ -18,7 +18,7 @@ interface Config {
   repo: string;
   projectNumber: number;
   backlogColumn: string;
-  todoColumn: string;
+  readyColumn: string;
   inProgressColumn: string;
   inReviewColumn: string;
   doneColumn: string;
@@ -58,7 +58,7 @@ function loadConfig(cwd: string): Config {
   if (!cfg.projectNumber) throw new Error(`githubOrchestrator.projectNumber is required`);
   return {
     backlogColumn: "Backlog",
-    todoColumn: "Ready",
+    readyColumn: "Ready",
     inProgressColumn: "In Progress",
     inReviewColumn: "In Review",
     doneColumn: "Done",
@@ -493,7 +493,7 @@ export default async function (pi: ExtensionAPI) {
     description: "Fan out worker agents for all issues in the Ready column",
     handler: async (_args, ctx) => {
       await init();
-      const readyColumn = cfg.todoColumn;
+      const readyColumn = cfg.readyColumn;
       let issues = await listIssues(gql, cfg, readyColumn);
       // Filter out issues labelled 'human' — those are reserved for human implementation
       const humanCount = issues.filter((i) => i.labels.includes("human")).length;

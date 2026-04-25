@@ -4,7 +4,7 @@
     "repo": "github-issue-orchestrator",
     "projectNumber": 3,
     "backlogColumn": "Backlog",
-    "todoColumn": "Ready",
+    "readyColumn": "Ready",
     "inProgressColumn": "In progress",
     "inReviewColumn": "In review",
     "doneColumn": "Done",

@@ -77,7 +77,7 @@ Users can edit these `.md` files freely; changes take effect on the next `/reloa
     "repo": "my-repo",
     "projectNumber": 1,
     "backlogColumn": "Backlog",
-    "todoColumn": "Ready",
+    "readyColumn": "Ready",
     "inProgressColumn": "In Progress",
     "inReviewColumn": "In Review",
     "doneColumn": "Done",
@@ -87,7 +87,7 @@ Users can edit these `.md` files freely; changes take effect on the next `/reloa
 }
 ```
 
-Only `owner`, `repo`, and `projectNumber` are required; all other fields have defaults matching the above. `todoColumn` is the column the planner moves issues into and `/dispatch` reads from (defaults to `"Ready"`).
+Only `owner`, `repo`, and `projectNumber` are required; all other fields have defaults matching the above. `readyColumn` is the column the planner moves issues into and `/dispatch` reads from (defaults to `"Ready"`).
 
 ## Typical workflow
 
