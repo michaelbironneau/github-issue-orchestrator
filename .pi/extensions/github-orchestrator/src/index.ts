@@ -77,33 +77,81 @@ async function getToken(pi: ExtensionAPI): Promise<string> {
 
 let projectMetaCache: ProjectMeta | null = null;
 
+/**
+ * Query a GitHub Project v2 by owner. Tries `organization(login: $owner)` first;
+ * if the project is not found (e.g. the owner is a personal account), falls back
+ * to `user(login: $owner)`. Returns the raw project node from whichever scope
+ * matched.
+ */
+async function queryProjectV2<TFields>(
+  gql: ReturnType<typeof createGraphql.defaults>,
+  owner: string,
+  projectNumber: number,
+  fieldFragment: string,
+): Promise<TFields> {
+  // Try organization scope first
+  const orgData = await gql<{
+    organization: { projectV2: TFields | null } | null;
+  }>(
+    `query($owner: String!, $number: Int!) {
+      organization(login: $owner) {
+        projectV2(number: $number) { ${fieldFragment} }
+      }
+    }`,
+    { owner, number: projectNumber },
+  ).catch(() => null);
+
+  if (orgData?.organization?.projectV2) return orgData.organization.projectV2;
+
+  // Fall back to user scope (personal account)
+  const userData = await gql<{
+    user: { projectV2: TFields | null } | null;
+  }>(
+    `query($owner: String!, $number: Int!) {
+      user(login: $owner) {
+        projectV2(number: $number) { ${fieldFragment} }
+      }
+    }`,
+    { owner, number: projectNumber },
+  );
+
+  if (userData?.user?.projectV2) return userData.user.projectV2;
+
+  throw new Error(
+    `Project #${projectNumber} not found under organization or user "${owner}". ` +
+    `Verify owner/projectNumber in .pi/settings.json and that your token has access.`,
+  );
+}
+
 async function fetchProjectMeta(
   gql: ReturnType<typeof createGraphql.defaults>,
   cfg: Config,
 ): Promise<ProjectMeta> {
   if (projectMetaCache) return projectMetaCache;
 
-  const data = await gql<{ organization: { projectV2: { id: string; fields: { nodes: Array<{ id: string; name: string; options?: Array<{ id: string; name: string }> }> } } } }>(
-    `query($owner: String!, $number: Int!) {
-      organization(login: $owner) {
-        projectV2(number: $number) {
-          id
-          fields(first: 20) {
-            nodes {
-              ... on ProjectV2SingleSelectField {
-                id
-                name
-                options { id name }
-              }
-            }
-          }
-        }
-      }
-    }`,
-    { owner: cfg.owner, number: cfg.projectNumber },
+  interface ProjectFields {
+    id: string;
+    fields: {
+      nodes: Array<{ id: string; name: string; options?: Array<{ id: string; name: string }> }>;
+    };
+  }
+
+  const project = await queryProjectV2<ProjectFields>(
+    gql,
+    cfg.owner,
+    cfg.projectNumber,
+    `id
+     fields(first: 20) {
+       nodes {
+         ... on ProjectV2SingleSelectField {
+           id
+           name
+           options { id name }
+         }
+       }
+     }`,
   );
 
-  const project = data.organization.projectV2;
   const statusField = project.fields.nodes.find(
     (f) => f.name === "Status" && f.options,
   );
@@ -126,50 +174,44 @@ async function listIssues(
   column?: string,
   labels?: string[],
 ): Promise<Issue[]> {
-  const data = await gql<{
-    organization: {
-      projectV2: {
-        items: {
-          nodes: Array<{
-            id: string;
-            fieldValueByName: { name?: string } | null;
-            content: {
-              __typename: string;
-              number: number;
-              title: string;
-              body: string;
-              labels: { nodes: Array<{ name: string }> };
-            } | null;
-          }>;
-        };
-      };
+  interface ProjectItems {
+    items: {
+      nodes: Array<{
+        id: string;
+        fieldValueByName: { name?: string } | null;
+        content: {
+          __typename: string;
+          number: number;
+          title: string;
+          body: string;
+          labels: { nodes: Array<{ name: string }> };
+        } | null;
+      }>;
     };
-  }>(
-    `query($owner: String!, $number: Int!) {
-      organization(login: $owner) {
-        projectV2(number: $number) {
-          items(first: 100) {
-            nodes {
-              id
-              fieldValueByName(name: "Status") {
-                ... on ProjectV2ItemFieldSingleSelectValue { name }
-              }
-              content {
-                __typename
-                ... on Issue {
-                  number title body
-                  labels(first: 10) { nodes { name } }
-                }
-              }
-            }
-          }
-        }
-      }
-    }`,
-    { owner: cfg.owner, number: cfg.projectNumber },
+  }
+
+  const project = await queryProjectV2<ProjectItems>(
+    gql,
+    cfg.owner,
+    cfg.projectNumber,
+    `items(first: 100) {
+       nodes {
+         id
+         fieldValueByName(name: "Status") {
+           ... on ProjectV2ItemFieldSingleSelectValue { name }
+         }
+         content {
+           __typename
+           ... on Issue {
+             number title body
+             labels(first: 10) { nodes { name } }
+           }
+         }
+       }
+     }`,
   );
 
-  return data.organization.projectV2.items.nodes
+  return project.items.nodes
     .filter((item) => item.content?.__typename === "Issue")
     .map((item) => ({
       number: item.content!.number,
@@ -356,7 +398,13 @@ export default async function (pi: ExtensionAPI) {
     description: "Fan out planner agents for all Backlog issues labelled needs-planning",
     handler: async (_args, ctx) => {
       await init();
-      const issues = await listIssues(gql, cfg, cfg.backlogColumn, ["needs-planning"]);
+      let issues = await listIssues(gql, cfg, cfg.backlogColumn, ["needs-planning"]);
+      // Filter out issues labelled 'human' — those are reserved for human planning
+      const humanCount = issues.filter((i) => i.labels.includes("human")).length;
+      issues = issues.filter((i) => !i.labels.includes("human"));
+      if (humanCount > 0) {
+        ctx.ui.notify(`Skipped ${humanCount} issue(s) labelled 'human' (reserved for human planning).`, "info");
+      }
       if (issues.length === 0) {
         ctx.ui.notify("No needs-planning issues found in the Backlog column.", "info");
         return;
@@ -393,6 +441,17 @@ export default async function (pi: ExtensionAPI) {
         issue_number: issueNumber,
       });
 
+      const issueLabels: string[] = (issue.labels as Array<{ name: string } | string>).map((l) =>
+        typeof l === "string" ? l : l.name,
+      );
+      if (issueLabels.includes("human")) {
+        ctx.ui.notify(
+          `Issue #${issueNumber} is labelled 'human' and is reserved for human planning and implementation only.`,
+          "error",
+        );
+        return;
+      }
+
       const taskContent = `Plan #${issueNumber}: ${issue.title}\n${issue.body ?? ""}`;
       const fullTask = extraInstructions
         ? `${taskContent}\n\nAdditional instructions: ${extraInstructions}`
@@ -407,7 +466,13 @@ export default async function (pi: ExtensionAPI) {
     handler: async (_args, ctx) => {
       await init();
       const readyColumn = cfg.todoColumn;
-      const issues = await listIssues(gql, cfg, readyColumn);
+      let issues = await listIssues(gql, cfg, readyColumn);
+      // Filter out issues labelled 'human' — those are reserved for human implementation
+      const humanCount = issues.filter((i) => i.labels.includes("human")).length;
+      issues = issues.filter((i) => !i.labels.includes("human"));
+      if (humanCount > 0) {
+        ctx.ui.notify(`Skipped ${humanCount} issue(s) labelled 'human' (reserved for human implementation).`, "info");
+      }
       if (issues.length === 0) {
         ctx.ui.notify(`No issues found in the "${readyColumn}" column.`, "info");
         return;

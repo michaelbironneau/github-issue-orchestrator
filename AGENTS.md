@@ -49,6 +49,7 @@ The default export is an async function receiving `ExtensionAPI` from `@mariozec
 - REST calls use `@octokit/rest` (issue comments, labels, PRs).
 - Project board queries and mutations use `@octokit/graphql` (GraphQL API v2 for project column/status).
 - Project metadata (node IDs, field IDs, column option IDs) is fetched once and cached in `projectMetaCache`.
+- **Organization and personal accounts**: GraphQL queries try `organization(login: $owner)` first; if the project is not found under that scope (e.g. the owner is a personal account), the query falls back to `user(login: $owner)`. No configuration change is needed — the same `owner` setting works for both.
 - Auth: `GITHUB_TOKEN` env var, falling back to `gh auth token`.
 
 ### Agent prompt templates (`.pi/agents/`)
