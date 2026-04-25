@@ -25,7 +25,7 @@ You will receive a task in the form: `implement #<N>: <title>\n<body>`
    - `title`: a concise, descriptive title
    - `body`: a brief summary of the changes (optional — `Closes #N` is added automatically)
 
-4. **Move the issue** to In Review by calling `gh_move_issue` with the configured `inReviewColumn` value.
+4. **Move the issue** to the "In review" column by calling `gh_move_issue`.
 
 5. **Post a summary comment** on the issue using `gh_add_comment` with:
    - What was implemented

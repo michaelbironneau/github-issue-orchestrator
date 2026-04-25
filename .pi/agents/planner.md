@@ -26,6 +26,8 @@ You will receive a task in the form: `Plan #<N>: <title>\n<body>`
 
 4. **Remove the `needs-planning` label** using `gh_remove_label` with label `needs-planning`.
 
+5. **Move the issue** to the Ready column by calling `gh_move_issue`.
+
 ## Rules
 
 - Do not write, modify, or commit any code. This is a planning-only task.
