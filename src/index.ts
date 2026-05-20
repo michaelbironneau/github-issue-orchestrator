@@ -454,16 +454,20 @@ export default async function (pi: ExtensionAPI) {
         ctx.ui.notify("No needs-planning issues found in the Backlog column.", "info");
         return;
       }
-      const capped = issues.slice(0, cfg.maxParallel);
-      if (capped.length < issues.length) {
-        ctx.ui.notify(`Capping at maxParallel=${cfg.maxParallel} (${issues.length} total found).`, "info");
+      const batches: Issue[][] = [];
+      for (let i = 0; i < issues.length; i += cfg.maxParallel) {
+        batches.push(issues.slice(i, i + cfg.maxParallel));
       }
-      const tasks = capped.map((issue) => {
-        const task = escapeForPiArg(`Plan #${issue.number}: ${issue.title}\n${issue.body}`);
-        return `ghplanner[worktree=true] "${task}"`;
-      });
-      const cmd = `/parallel ${tasks.join(" -> ")}`;
-      await pi.sendUserMessage(cmd, { deliverAs: "followUp" });
+      if (batches.length > 1) {
+        ctx.ui.notify(`Planning ${issues.length} issues in ${batches.length} batches of up to ${cfg.maxParallel}.`, "info");
+      }
+      for (const batch of batches) {
+        const tasks = batch.map((issue) => {
+          const task = escapeForPiArg(`Plan #${issue.number}: ${issue.title}\n${issue.body}`);
+          return `ghplanner[worktree=true] "${task}"`;
+        });
+        await pi.sendUserMessage(`/parallel ${tasks.join(" -> ")}`, { deliverAs: "followUp" });
+      }
     },
   });
 
@@ -522,16 +526,20 @@ export default async function (pi: ExtensionAPI) {
         ctx.ui.notify(`No issues found in the "${readyColumn}" column.`, "info");
         return;
       }
-      const capped = issues.slice(0, cfg.maxParallel);
-      if (capped.length < issues.length) {
-        ctx.ui.notify(`Capping at maxParallel=${cfg.maxParallel} (${issues.length} total found).`, "info");
+      const batches: Issue[][] = [];
+      for (let i = 0; i < issues.length; i += cfg.maxParallel) {
+        batches.push(issues.slice(i, i + cfg.maxParallel));
       }
-      const tasks = capped.map((issue) => {
-        const task = escapeForPiArg(`implement #${issue.number}: ${issue.title}\n${issue.body}`);
-        return `ghworker[worktree=true] "${task}"`;
-      });
-      const cmd = `/parallel ${tasks.join(" -> ")}`;
-      await pi.sendUserMessage(cmd, { deliverAs: "followUp" });
+      if (batches.length > 1) {
+        ctx.ui.notify(`Dispatching ${issues.length} issues in ${batches.length} batches of up to ${cfg.maxParallel}.`, "info");
+      }
+      for (const batch of batches) {
+        const tasks = batch.map((issue) => {
+          const task = escapeForPiArg(`implement #${issue.number}: ${issue.title}\n${issue.body}`);
+          return `ghworker[worktree=true] "${task}"`;
+        });
+        await pi.sendUserMessage(`/parallel ${tasks.join(" -> ")}`, { deliverAs: "followUp" });
+      }
     },
   });
 }
