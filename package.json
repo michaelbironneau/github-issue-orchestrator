@@ -1,6 +1,6 @@
 {
   "name": "github-issue-orchestrator",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "dependencies": {
     "@octokit/graphql": "^8",
     "@octokit/rest": "^21"
