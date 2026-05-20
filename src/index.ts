@@ -24,7 +24,7 @@ interface Config {
   inReviewColumn: string;
   doneColumn: string;
   baseBranch: string;
-  maxParallel: number;
+
 }
 
 interface Issue {
@@ -64,7 +64,6 @@ function loadConfig(cwd: string): Config {
     inReviewColumn: "In Review",
     doneColumn: "Done",
     baseBranch: "main",
-    maxParallel: 3,
     ...cfg,
   } as Config;
 }
@@ -454,20 +453,11 @@ export default async function (pi: ExtensionAPI) {
         ctx.ui.notify("No needs-planning issues found in the Backlog column.", "info");
         return;
       }
-      const batches: Issue[][] = [];
-      for (let i = 0; i < issues.length; i += cfg.maxParallel) {
-        batches.push(issues.slice(i, i + cfg.maxParallel));
-      }
-      if (batches.length > 1) {
-        ctx.ui.notify(`Planning ${issues.length} issues in ${batches.length} batches of up to ${cfg.maxParallel}.`, "info");
-      }
-      for (const batch of batches) {
-        const tasks = batch.map((issue) => {
-          const task = escapeForPiArg(`Plan #${issue.number}: ${issue.title}\n${issue.body}`);
-          return `ghplanner[worktree=true] "${task}"`;
-        });
-        await pi.sendUserMessage(`/parallel ${tasks.join(" -> ")}`, { deliverAs: "followUp" });
-      }
+      const tasks = issues.map((issue) => {
+        const task = escapeForPiArg(`Plan #${issue.number}: ${issue.title}\n${issue.body}`);
+        return `ghplanner[worktree=true] "${task}"`;
+      });
+      await pi.sendUserMessage(`/parallel ${tasks.join(" -> ")}`, { deliverAs: "followUp" });
     },
   });
 
@@ -526,20 +516,11 @@ export default async function (pi: ExtensionAPI) {
         ctx.ui.notify(`No issues found in the "${readyColumn}" column.`, "info");
         return;
       }
-      const batches: Issue[][] = [];
-      for (let i = 0; i < issues.length; i += cfg.maxParallel) {
-        batches.push(issues.slice(i, i + cfg.maxParallel));
-      }
-      if (batches.length > 1) {
-        ctx.ui.notify(`Dispatching ${issues.length} issues in ${batches.length} batches of up to ${cfg.maxParallel}.`, "info");
-      }
-      for (const batch of batches) {
-        const tasks = batch.map((issue) => {
-          const task = escapeForPiArg(`implement #${issue.number}: ${issue.title}\n${issue.body}`);
-          return `ghworker[worktree=true] "${task}"`;
-        });
-        await pi.sendUserMessage(`/parallel ${tasks.join(" -> ")}`, { deliverAs: "followUp" });
-      }
+      const tasks = issues.map((issue) => {
+        const task = escapeForPiArg(`implement #${issue.number}: ${issue.title}\n${issue.body}`);
+        return `ghworker[worktree=true] "${task}"`;
+      });
+      await pi.sendUserMessage(`/parallel ${tasks.join(" -> ")}`, { deliverAs: "followUp" });
     },
   });
 }

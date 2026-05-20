@@ -39,9 +39,9 @@ The default export is an async function receiving `ExtensionAPI` from `@mariozec
 **Commands** (user-invocable via `/`):
 | Command | Behaviour |
 |---------|-----------|
-| `/plan-all` | Fans out `planner[worktree=true]` agents for all Backlog issues labelled `needs-planning` (skipping issues labelled `human`), up to `maxParallel` |
+| `/plan-all` | Fans out `planner[worktree=true]` agents for all Backlog issues labelled `needs-planning` (skipping issues labelled `human`) |
 | `/plan <N> [instructions]` | Runs a single planner for issue `#N` |
-| `/dispatch` | Fans out `worker[worktree=true]` agents for all issues in the Ready column (skipping those labelled `human`), up to `maxParallel` |
+| `/dispatch` | Fans out `worker[worktree=true]` agents for all issues in the Ready column (skipping those labelled `human`) |
 
 `/plan-all` and `/dispatch` emit a `/parallel ...` pi command via `pi.sendUserMessage(..., { deliverAs: "followUp" })`.
 
@@ -81,8 +81,7 @@ Users can edit these `.md` files freely; changes take effect on the next `/reloa
     "inProgressColumn": "In Progress",
     "inReviewColumn": "In Review",
     "doneColumn": "Done",
-    "baseBranch": "main",
-    "maxParallel": 3
+    "baseBranch": "main"
   }
 }
 ```
